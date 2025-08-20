@@ -1,0 +1,33 @@
+# Jekyll 설정 파일 (GitHub Pages용)
+title: Market Trend Chatbot
+description: AI 기반 시장 트렌드 분석 챗봇 서비스 - 숭실대학교 비전공자 1팀
+theme: jekyll-theme-cayman
+
+# GitHub Pages 설정
+baseurl: "" 
+url: "https://aebonlee.github.io/llm_01"
+
+# 플러그인
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+# 제외 파일
+exclude:
+  - backend/
+  - frontend/node_modules/
+  - frontend/src/
+  - "*.log"
+  - "*.pyc"
+  - ".env"
+  - "package-lock.json"
+  - "package.json"
+  - "vite.config.js"
+  - "tailwind.config.js"
+  - "postcss.config.js"
+
+# 기본 설정
+markdown: kramdown
+kramdown:
+  input: GFM
+  hard_wrap: false
