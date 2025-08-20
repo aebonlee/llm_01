@@ -39,7 +39,7 @@
 
 ## 주요 개발 내역
 
-### 1단계: 프로젝트 구조 설계
+### 1단계: 프로젝트 구조 설계 (2025.08.20)
 ```
 market-trend-chatbot/
 ├── backend/                 # FastAPI 백엔드
@@ -135,29 +135,81 @@ components/
 - 브레이크포인트: sm(640px), md(768px), lg(1024px)
 - 터치 친화적 인터페이스
 
-### 5단계: 배포 설정
+### 5단계: 배포 설정 및 최종 수정
 
-#### 5.1 Backend (Render.com)
+#### 5.1 Backend (Render.com) - 최종 배포
+**최종 성공 설정**:
 ```yaml
 services:
   - type: web
-    name: market-trend-chatbot-api
-    runtime: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    name: llm-01
+    env: python
+    plan: free
+    rootDir: backend
+    buildCommand: "pip install --upgrade pip && pip install -r requirements.txt"
+    startCommand: "uvicorn main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-4o-mini
 ```
 
-#### 5.2 Frontend (Netlify)
-```toml
-[[redirects]]
-  from = "/api/*"
-  to = "https://llm-01.onrender.com/api/:splat"
-  status = 200
-
-[build]
-  command = "npm run build"
-  publish = "dist"
+**최종 패키지 버전** (Python 3.13 호환):
 ```
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+python-dotenv==1.0.1
+langchain==0.2.16
+langchain-openai==0.1.23
+tiktoken==0.7.0
+pydantic==2.9.1
+python-multipart==0.0.9
+aiofiles==24.1.0
+```
+
+**배포 URL**: https://llm-01.onrender.com
+
+#### 5.2 Frontend (GitHub Pages) - 최종 배포
+**GitHub Actions 워크플로우** (.github/workflows/deploy.yml):
+```yaml
+name: Deploy to GitHub Pages
+on:
+  push:
+    branches: [ main ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Build React app
+        run: |
+          cd frontend
+          npm ci || npm install
+          npm run build
+        env:
+          VITE_API_URL: https://llm-01.onrender.com
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
+        with:
+          path: './frontend/dist'
+```
+
+**Vite 설정** (base path 중요):
+```javascript
+export default defineConfig({
+  plugins: [react()],
+  base: '/llm_01/',  // GitHub Pages 경로
+  // ...
+})
+```
+
+**배포 URL**: https://aebonlee.github.io/llm_01/
 
 ## API 명세
 
@@ -224,10 +276,28 @@ services:
 ### 문제 1: CORS 에러
 **해결**: FastAPI CORS 미들웨어 설정
 
-### 문제 2: 긴 응답 시간
+### 문제 2: Render.com 배포 실패 (Python 버전 충돌)
+**문제**: Python 3.13과 Pydantic 2.5.0 비호환성
+**해결**: 
+- 최신 패키지 버전으로 업데이트 (Pydantic 2.9.1)
+- runtime.txt 제거하여 Render 기본 Python 사용
+- FastAPI 0.115.0, LangChain 0.2.16으로 업데이트
+
+### 문제 3: GitHub Pages Jekyll vs React 충돌
+**문제**: Jekyll이 React 앱 대신 문서 사이트 생성
+**해결**: 
+- Jekyll 설정 제거 (_config.yml, index.md 삭제)
+- GitHub Actions 워크플로우 생성
+- React 앱을 GitHub Pages로 직접 배포
+
+### 문제 4: Render 서비스 rootDir 설정
+**문제**: requirements.txt 파일을 찾을 수 없음
+**해결**: render.yaml에 rootDir: backend 설정 추가
+
+### 문제 5: 긴 응답 시간
 **해결**: 스트리밍 응답 구현 검토
 
-### 문제 3: 세션 관리
+### 문제 6: 세션 관리
 **해결**: 메모리 기반 → Redis 전환 검토
 
 ## 참고 자료
