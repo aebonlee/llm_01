@@ -91,3 +91,32 @@ pip install -r requirements.txt
 - **tiktoken**: >=0.7,<1 (langchain-openai 호환)
 - **빌드 스크립트**: render-build.sh 유지
 - **테스트 완료**: 의존성 충돌 해결 확인
+
+---
+
+## 2025-08-21: 시작 명령 오류 해결
+
+### 문제 상황
+- Render.com이 기본 gunicorn 명령 실행 시도
+- `gunicorn: command not found` 오류 발생
+- render.yaml의 startCommand가 무시됨
+
+### 해결 방법
+
+#### 1. 시작 스크립트 생성
+- `backend/render-start.sh` 파일 생성
+- uvicorn 실행 명령 포함
+- 환경 변수 PORT 처리
+
+#### 2. gunicorn 패키지 추가
+- requirements.txt에 `gunicorn==21.2.0` 추가
+- Render의 기본 동작과 호환성 확보
+
+#### 3. render.yaml 수정
+- startCommand를 스크립트 실행으로 변경
+- 실행 권한 부여 후 스크립트 실행
+
+### 변경된 파일
+- `backend/render-start.sh` - 새 시작 스크립트
+- `backend/requirements.txt` - gunicorn 추가
+- `render.yaml` - startCommand 수정
