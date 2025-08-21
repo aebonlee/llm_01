@@ -1,6 +1,6 @@
 # 개발 내역 (Development Log)
 
-## 2025-08-21: Render.com 배포 오류 해결
+## 2025-08-21: Render.com 배포 오류 해결 (2차 수정)
 
 ### 문제 상황
 Render.com에서 백엔드 배포 시 `tiktoken` 패키지 빌드 실패 오류 발생
@@ -64,3 +64,30 @@ pip install -r requirements.txt
 - Python 3.13 환경에서 테스트됨
 - 향후 tiktoken 업데이트 시 pre-compiled wheel 지원 여부 확인 필요
 - Render.com free tier 사용 중
+
+---
+
+## 2025-08-21: 의존성 충돌 해결 (추가 수정)
+
+### 추가 문제 발생
+- tiktoken 0.5.2와 langchain-openai 0.1.23 간 의존성 충돌
+- langchain-openai가 tiktoken>=0.7 요구
+
+### 최종 해결 방법
+
+#### 1. Python 버전 지정
+- Render.com 기본 Python 3.13에서 tiktoken 빌드 실패
+- Python 3.11로 다운그레이드하여 호환성 확보
+- `render.yaml`에 `pythonVersion: "3.11"` 추가
+- `runtime.txt` 파일 생성 (python-3.11.10)
+
+#### 2. tiktoken 버전 범위 조정
+- **변경**: `tiktoken>=0.7,<1`
+- langchain-openai 요구사항 충족
+- Python 3.11에서 안정적 빌드 가능
+
+### 최종 설정
+- **Python 버전**: 3.11
+- **tiktoken**: >=0.7,<1 (langchain-openai 호환)
+- **빌드 스크립트**: render-build.sh 유지
+- **테스트 완료**: 의존성 충돌 해결 확인
